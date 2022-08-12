@@ -20,10 +20,9 @@ class CurvesView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
     companion object {
-        private const val AFTER_FIRST = 1
         private const val INTENSITY = 0.2F
         private const val X_RANGE_PERCENT = 0.04167F // 4.167 %
-        private const val Y_RANGE_PERCENT = 0.1F // 10 %
+        private const val Y_RANGE_PERCENT = 0.15F // 15 %
         private val PADDING = 8.dpToPx()
         private val DELETE_ZONE = 100
     }
@@ -60,7 +59,7 @@ class CurvesView @JvmOverloads constructor(
             field?.isSelected = true
         }
 
-    private var pointSize: Int = 30
+    private var pointSide: Int = 30
     private var startX: Int = 0
     private var startY: Int = 0
     private var endX: Int = 0
@@ -110,7 +109,7 @@ class CurvesView @JvmOverloads constructor(
     }
 
     private fun drawPoint(canvas: Canvas, current: PointF, isSelected: Boolean = false) {
-        val rect = rectF(current, pointSize / 2)
+        val rect = rectF(current, pointSide / 2)
         canvas.drawOval(rect, themeManager.getPointFillPaint(isSelected)) // Fill
         canvas.drawOval(rect, themeManager.pointStrokePaint) // Stroke
     }
@@ -129,7 +128,6 @@ class CurvesView @JvmOverloads constructor(
         path.moveTo(first.x, first.y)
 
         points
-//            .drop(AFTER_FIRST)
             .forEachWithPreviousAndNext { prevPrevious, previous, current, next ->
                 val prevDx = (current.x - prevPrevious.x) * INTENSITY
                 val prevDy = (current.y - prevPrevious.y) * INTENSITY
@@ -151,8 +149,6 @@ class CurvesView @JvmOverloads constructor(
         }
     }
 
-    private fun ratio(size: Int): Int = if (size > 3) 5 else 1
-
     private fun Canvas.drawInRect(
         left: Int, top: Int, right: Int, bottom: Int, action: Canvas.() -> Unit
     ) {
@@ -163,11 +159,14 @@ class CurvesView @JvmOverloads constructor(
     }
 
     private fun drawBorder(canvas: Canvas) {
-        canvas.drawLine(startX, endY, endX, startY, themeManager.borderPaint) // Draw diagonal line
-        canvas.drawLine(startX, startY, endX, startY, themeManager.borderPaint) // Draw top line
-        canvas.drawLine(endX, startY, endX, endY, themeManager.borderPaint) // Draw right line
-        canvas.drawLine(endX, endY, startX, endY, themeManager.borderPaint) // Draw bottom line
-        canvas.drawLine(startX, endY, startX, startY, themeManager.borderPaint) // Draw left line
+        val w = themeManager.borderPaint.strokeWidth.toInt() / 2
+        val paint = themeManager.borderPaint
+
+        canvas.drawLine(startX + w, endY - w, endX - w, startY + w, paint) // Draw diagonal line
+        canvas.drawLine(startX + w, startY + w, endX - w, startY + w, paint) // Draw top line
+        canvas.drawLine(endX - w, startY, endX - w, endY, paint) // Draw right line
+        canvas.drawLine(endX - w, endY - w, startX + w, endY - w, paint) // Draw bottom line
+        canvas.drawLine(startX + w, endY, startX + w, startY, paint) // Draw left line
     }
 
     @SuppressLint("ClickableViewAccessibility")

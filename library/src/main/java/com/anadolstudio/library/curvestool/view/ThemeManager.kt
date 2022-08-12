@@ -1,8 +1,6 @@
 package com.anadolstudio.library.curvestool.view
 
-import android.graphics.Color
-import android.graphics.CornerPathEffect
-import android.graphics.Paint
+import android.graphics.*
 import com.anadolstudio.library.curvestool.util.AntialiasPaint
 import com.anadolstudio.library.curvestool.util.dpToPx
 
@@ -14,7 +12,7 @@ class ThemeManager(viewState: CurvesViewState) {
             borderPaint.color = value
         }
 
-    internal var borderWidth = 2F.dpToPx()
+    internal var borderWidth = 8F.dpToPx()
         set(value) {
             field = value
             borderPaint.strokeWidth = value
@@ -40,7 +38,8 @@ class ThemeManager(viewState: CurvesViewState) {
     internal val curvePaint = AntialiasPaint().apply {
         color = viewState.toColor()
         strokeWidth = curveWidth
-        style = Paint.Style.STROKE
+        style = Paint.Style.FILL_AND_STROKE
+//        xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_ATOP)
     }
 
     internal val pointStrokePaint = AntialiasPaint().apply {
