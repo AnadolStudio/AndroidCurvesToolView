@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.graphics.toPoint
@@ -26,6 +25,7 @@ class CurvesView @JvmOverloads constructor(
         private const val X_RANGE_PERCENT = 0.04167F // 4.167 %
         private const val Y_RANGE_PERCENT = 0.1F // 10 %
         private val PADDING = 8.dpToPx()
+        private val DELETE_ZONE = 100
     }
 
     private var viewState: CurvesViewState = CurvesViewState.WHITE_STATE
@@ -224,47 +224,36 @@ class CurvesView @JvmOverloads constructor(
 
         if (currentPoints.first() != selectPoint && currentPoints.last() != selectPoint) {
             val range = borderWidth * X_RANGE_PERCENT
-            val scaleRange = range.scaleTo(borderWidth, MAX_VALUE).toFloat()
-
-            val leftPoint = currentPoints.find { curvePoint ->
-                scaleX.inRange(curvePoint.curvePoint.x, scaleRange)
-            }
-            val rightPoint = currentPoints.findLast { curvePoint ->
-                scaleX.inRange(curvePoint.curvePoint.x, scaleRange)
-            }
-            Log.d("WHEN", "pre: leftPoint ${leftPoint == null} rightPoint ${rightPoint == null}")
 
             val index = currentPoints.indexOf(selectPoint)
+            val leftPoint = currentPoints[index - 1]
+            val rightPoint = currentPoints[index + 1]
 
-            when {
-                leftPoint != null && leftPoint.curvePoint.x > selectPoint.curvePoint.x -> {
-                    Log.d("WHEN", "onMove: leftPoint $scaleX ${leftPoint.curvePoint.x}")
-                    val firstRightNeighbour = currentPoints[index + 1]
-                    selectPoint.viewPoint.x = firstRightNeighbour.viewPoint.x - range
-                    selectPoint.curvePoint.x = firstRightNeighbour.curvePoint.x - scaleRange
-                }
-                rightPoint != null && rightPoint.curvePoint.x < selectPoint.curvePoint.x -> {
-                    Log.d("WHEN", "onMove: rightPoint $scaleX ${rightPoint.curvePoint.x}")
-                    val firstLeftNeighbour = currentPoints[index - 1]
-                    selectPoint.viewPoint.x = firstLeftNeighbour.viewPoint.x + range
-                    selectPoint.curvePoint.x = firstLeftNeighbour.curvePoint.x + scaleRange
-                }
-                leftPoint == selectPoint && rightPoint == selectPoint -> {
-                    Log.d("WHEN", "onMove: thisPoint $scaleX")
-                    selectPoint.viewPoint.x = event.x
-                    selectPoint.curvePoint.x = scaleX.toFloat()
-                }
+            if (event.x in leftPoint.viewPoint.x + range..rightPoint.viewPoint.x - range) {
+                selectPoint.viewPoint.x = event.x
+                selectPoint.curvePoint.x = scaleX.toFloat()
+                isChanged = true
             }
 
-            isChanged = true
-
-            selectPoint.candidateToDelete = event.y.toInt() !in 0..height
+            selectPoint.candidateToDelete = event.y.toInt() !in -DELETE_ZONE..height + DELETE_ZONE
         }
 
-        if (event.y.toInt() in startY..endY) {
-            selectPoint.viewPoint.y = event.y
-            selectPoint.curvePoint.y = scaleY.toFloat()
-            isChanged = true
+        when {
+            event.y.toInt() in startY..endY -> {
+                selectPoint.viewPoint.y = event.y
+                selectPoint.curvePoint.y = scaleY.toFloat()
+                isChanged = true
+            }
+            event.y.toInt() < startY ->{
+                selectPoint.viewPoint.y = startY.toFloat()
+                selectPoint.curvePoint.y = startY.scaleTo(borderHeight, MAX_VALUE).toFloat()
+                isChanged = true
+            }
+            event.y.toInt() > endY ->{
+                selectPoint.viewPoint.y = endY.toFloat()
+                selectPoint.curvePoint.y = endY.scaleTo(borderHeight, MAX_VALUE).toFloat()
+                isChanged = true
+            }
         }
 
         if (isChanged) {
