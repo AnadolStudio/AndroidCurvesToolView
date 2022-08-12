@@ -244,12 +244,12 @@ class CurvesView @JvmOverloads constructor(
                 selectPoint.curvePoint.y = scaleY.toFloat()
                 isChanged = true
             }
-            event.y.toInt() < startY ->{
+            event.y.toInt() < startY -> {
                 selectPoint.viewPoint.y = startY.toFloat()
                 selectPoint.curvePoint.y = 0F
                 isChanged = true
             }
-            event.y.toInt() > endY ->{
+            event.y.toInt() > endY -> {
                 selectPoint.viewPoint.y = endY.toFloat()
                 selectPoint.curvePoint.y = MAX_VALUE.toFloat()
                 isChanged = true
