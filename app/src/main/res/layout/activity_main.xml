@@ -7,7 +7,7 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
-    <com.anadolstudio.library.curvestool.view.CurvesView
+    <com.anadolstudio.library.curvestool.view.CurvesViewJava
         android:layout_width="0dp"
         android:layout_height="300dp"
         android:text="Hello World!"

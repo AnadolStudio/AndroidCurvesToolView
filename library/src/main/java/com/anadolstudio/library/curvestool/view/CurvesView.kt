@@ -5,10 +5,10 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import androidx.core.graphics.toPointF
 import com.anadolstudio.library.curvestool.util.dpToPx
 import com.anadolstudio.library.curvestool.util.drawLine
-import com.anadolstudio.library.curvestool.util.forEachWithPrevious
-import kotlin.math.abs
+import com.anadolstudio.library.curvestool.util.forEachWithPreviousAndNext
 import kotlin.random.Random
 
 class CurvesView @JvmOverloads constructor(
@@ -18,7 +18,10 @@ class CurvesView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
     companion object {
-        private const val MIN_SIZE = 2
+        private const val AFTER_FIRST = 1
+        private const val INTENSITY = 0.15F
+
+        //        private const val INTENSITY = 0.085F
         private val PADDING = 8.dpToPx()
     }
 
@@ -55,15 +58,16 @@ class CurvesView @JvmOverloads constructor(
         super.onLayout(changed, left, top, right, bottom)
 
         if (changed && whitePoints.isEmpty()) {
-            whitePoints.add(PointF(startX.toFloat(), endY.toFloat()))
-            whitePoints.add(PointF(endX.toFloat(), startY.toFloat()))
+            whitePoints.add(Point(startX, endY).toPointF())
+            whitePoints.addAll(testPoints)
+            whitePoints.add(Point(endX, startY).toPointF())
         }
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         drawBorder(canvas)
-        drawCurve(canvas, whitePoints)
+        drawCurveCubicBezier(canvas, whitePoints)
         drawAllPoints(canvas, whitePoints)
     }
 
@@ -84,38 +88,30 @@ class CurvesView @JvmOverloads constructor(
         current.y + halfSize
     )
 
-    private fun drawCurve(canvas: Canvas, points: List<PointF>) {
+    private fun drawCurveCubicBezier(canvas: Canvas, points: List<PointF>) {
         val path = Path()
 
-        if (points.size > MIN_SIZE) {
-            points.forEachWithPrevious { previous, current ->
-                previous ?: let {
-                    path.moveTo(current.x, current.y)
+        val first = points.first()
+        path.moveTo(first.x, first.y)
 
-                    return@forEachWithPrevious
-                }
+        points.drop(AFTER_FIRST)
+            .forEachWithPreviousAndNext { prevPrevious, previous, current, next ->
+                val prevDx = (current.x - prevPrevious.x) * INTENSITY
+                val prevDy = (current.y - prevPrevious.y) * INTENSITY
+                val curDx = (next.x - previous.x) * INTENSITY
+                val curDy = (next.y - previous.y) * INTENSITY
 
-                val center = getCenterPoint(previous, current)
-                val delta = abs(center.x - current.x) / 2
-
-                path.quadTo(center.x - delta, previous.y, center.x, center.y)
-                path.quadTo(center.x + delta, current.y, current.x, current.y)
+                path.cubicTo(
+                    previous.x + prevDx,
+                    previous.y + prevDy,
+                    current.x - curDx,
+                    current.y - curDy,
+                    current.x,
+                    current.y
+                )
             }
-        } else { // if two points draw line
-            val first = points.first()
-            val last = points.last()
-            path.moveTo(first.x, first.y)
-            path.lineTo(last.x, last.y)
-        }
 
         canvas.drawPath(path, themeManager.curvePaint)
-    }
-
-    private fun getCenterPoint(previous: PointF, current: PointF): PointF {
-        val x = listOf(previous.x, current.x).average().toFloat()
-        val y = listOf(previous.y, current.y).average().toFloat()
-
-        return PointF(x, y)
     }
 
     private fun drawBorder(canvas: Canvas) {
@@ -127,3 +123,16 @@ class CurvesView @JvmOverloads constructor(
     }
 
 }
+
+val testPoints = listOf(
+    Point((100), (300)).toPointF(),
+    Point((200), (500)).toPointF(),
+    Point((300), (100)).toPointF(),
+    Point((400), (500)).toPointF(),
+    Point((450), (400)).toPointF(),
+    Point((550), (600)).toPointF(),
+    Point((650), (900)).toPointF(),
+    Point((750), (1300)).toPointF(),
+    Point((850), (1300)).toPointF(),
+    Point((950), (1300)).toPointF()
+)

@@ -1,6 +1,7 @@
 package com.anadolstudio.library.curvestool.view
 
 import android.graphics.Color
+import android.graphics.CornerPathEffect
 import android.graphics.Paint
 import com.anadolstudio.library.curvestool.util.AntialiasPaint
 import com.anadolstudio.library.curvestool.util.dpToPx
@@ -25,7 +26,7 @@ class ThemeManager(viewState: CurvesViewState) {
             curvePaint.strokeWidth = value
         }
 
-    internal var pointStrokeWidth = 1F.dpToPx()
+    internal var pointStrokeWidth = 2F.dpToPx()
         set(value) {
             field = value
             pointStrokePaint.strokeWidth = value
