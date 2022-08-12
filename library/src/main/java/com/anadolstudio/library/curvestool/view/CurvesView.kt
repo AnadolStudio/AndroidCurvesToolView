@@ -4,12 +4,13 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
-import androidx.core.graphics.toPointF
-import com.anadolstudio.library.curvestool.util.dpToPx
-import com.anadolstudio.library.curvestool.util.drawLine
-import com.anadolstudio.library.curvestool.util.forEachWithPreviousAndNext
-import kotlin.random.Random
+import com.anadolstudio.library.curvestool.data.CurvePoint
+import com.anadolstudio.library.curvestool.data.CurvePoint.Companion.MAX_VALUE
+import com.anadolstudio.library.curvestool.util.*
+import kotlin.math.max
+import kotlin.math.min
 
 class CurvesView @JvmOverloads constructor(
     context: Context,
@@ -20,8 +21,8 @@ class CurvesView @JvmOverloads constructor(
     companion object {
         private const val AFTER_FIRST = 1
         private const val INTENSITY = 0.15F
-
-        //        private const val INTENSITY = 0.085F
+        private const val X_RANGE_PERCENT = 0.04167F // 4.167 %
+        private const val Y_RANGE_PERCENT = 0.1F // 10 %
         private val PADDING = 8.dpToPx()
     }
 
@@ -30,24 +31,36 @@ class CurvesView @JvmOverloads constructor(
             field = value
             themeManager.curvePaint.color = value.toColor()
             themeManager.pointStrokePaint.color = value.toColor()
+
+            currentPoints = when (value) {
+                CurvesViewState.WHITE_STATE -> whitePoints
+                CurvesViewState.RED_STATE -> redPoints
+                CurvesViewState.GREEN_STATE -> greenPoints
+                CurvesViewState.BLUE_STATE -> bluePoints
+            }
+
             requestLayout()
         }
 
     private val themeManager = ThemeManager(viewState)
-    private val whitePoints = mutableListOf<PointF>()
+
+    private val whitePoints = mutableListOf<CurvePoint>()
+    private val redPoints = mutableListOf<CurvePoint>()
+    private val greenPoints = mutableListOf<CurvePoint>()
+    private val bluePoints = mutableListOf<CurvePoint>()
+    private var currentPoints = mutableListOf<CurvePoint>()
+    private var selectedPoint: CurvePoint? = null
+        set(value) {
+            field?.isSelected = false
+            field = value
+            field?.isSelected = true
+        }
+
     private var pointSize: Int = 30
-
-    private val startX: Int
-        get() = PADDING
-
-    private val startY: Int
-        get() = PADDING
-
-    private val endX: Int
-        get() = width - PADDING
-
-    private val endY: Int
-        get() = height - PADDING
+    private var startX: Int = 0
+    private var startY: Int = 0
+    private var endX: Int = 0
+    private var endY: Int = 0
 
     init {
         setBackgroundColor(Color.TRANSPARENT)
@@ -57,22 +70,28 @@ class CurvesView @JvmOverloads constructor(
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
 
-        if (changed && whitePoints.isEmpty()) {
-            whitePoints.add(Point(startX, endY).toPointF())
-            whitePoints.addAll(testPoints)
-            whitePoints.add(Point(endX, startY).toPointF())
+        startX = PADDING
+        startY = PADDING
+        endX = width - PADDING
+        endY = height - PADDING
+
+        if (changed && currentPoints.isEmpty()) {
+            currentPoints.add(CurvePoint(startX, endY, width, height))
+            currentPoints.addAll(createTestPoints())
+            currentPoints.add(CurvePoint(endX, startY, width, height))
         }
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         drawBorder(canvas)
-        drawCurveCubicBezier(canvas, whitePoints)
-        drawAllPoints(canvas, whitePoints)
+
+        drawCurveCubicBezier(canvas, currentPoints.map { it.viewPoint })
+        drawAllPoints(canvas, currentPoints)
     }
 
-    private fun drawAllPoints(canvas: Canvas, points: MutableList<PointF>) {
-        points.forEach { current -> drawPoint(canvas, current, Random.nextBoolean()) }
+    private fun drawAllPoints(canvas: Canvas, points: List<CurvePoint>) {
+        points.forEach { current -> drawPoint(canvas, current.viewPoint, current.isSelected) }
     }
 
     private fun drawPoint(canvas: Canvas, current: PointF, isSelected: Boolean = false) {
@@ -94,7 +113,8 @@ class CurvesView @JvmOverloads constructor(
         val first = points.first()
         path.moveTo(first.x, first.y)
 
-        points.drop(AFTER_FIRST)
+        points
+            .drop(AFTER_FIRST)
             .forEachWithPreviousAndNext { prevPrevious, previous, current, next ->
                 val prevDx = (current.x - prevPrevious.x) * INTENSITY
                 val prevDy = (current.y - prevPrevious.y) * INTENSITY
@@ -111,7 +131,18 @@ class CurvesView @JvmOverloads constructor(
                 )
             }
 
-        canvas.drawPath(path, themeManager.curvePaint)
+        canvas.drawInRect(startX, startY, endX, endY) {
+            drawPath(path, themeManager.curvePaint)
+        }
+    }
+
+    private fun Canvas.drawInRect(
+        left: Int, top: Int, right: Int, bottom: Int, action: Canvas.() -> Unit
+    ) {
+        save()
+        clipRect(left, top, right, bottom)
+        action.invoke(this)
+        restore()
     }
 
     private fun drawBorder(canvas: Canvas) {
@@ -122,17 +153,74 @@ class CurvesView @JvmOverloads constructor(
         canvas.drawLine(startX, endY, startX, startY, themeManager.borderPaint) // Draw left line
     }
 
-}
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent): Boolean = true.also {
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> onTap(event)
+            MotionEvent.ACTION_MOVE -> onMove(event)
+            MotionEvent.ACTION_UP -> onUp(event)
+        }
+    }
 
-val testPoints = listOf(
-    Point((100), (300)).toPointF(),
-    Point((200), (500)).toPointF(),
-    Point((300), (100)).toPointF(),
-    Point((400), (500)).toPointF(),
-    Point((450), (400)).toPointF(),
-    Point((550), (600)).toPointF(),
-    Point((650), (900)).toPointF(),
-    Point((750), (1300)).toPointF(),
-    Point((850), (1300)).toPointF(),
-    Point((950), (1300)).toPointF()
-)
+    private fun onTap(event: MotionEvent) = onTouchEventAction {
+        val scaleX = event.x.scaleTo(width, MAX_VALUE)
+        val scaleY = event.y.scaleTo(height, MAX_VALUE)
+
+        val pointInRange = inXRange(scaleX)
+
+        when (pointInRange != null) {
+            true -> selectIfYInTouchRange(scaleY, pointInRange)
+            false -> selectNewPoint(event)
+        }
+
+    }
+
+    private fun selectNewPoint(event: MotionEvent) {
+        selectedPoint = CurvePoint(event.x, event.y, width, height, true)
+            .also(this::addNewPointAndSort)
+    }
+
+    private fun selectIfYInTouchRange(y: Int, pointInRange: CurvePoint) {
+        val range = (height * Y_RANGE_PERCENT).scaleTo(height, MAX_VALUE).toFloat()
+
+        if (y.inRange(pointInRange.curvePoint.y, range)) {
+            selectedPoint = pointInRange
+        }
+    }
+
+    private fun inXRange(scaleX: Int) = currentPoints.find { curvePoint ->
+        val range = (width * X_RANGE_PERCENT).scaleTo(width, MAX_VALUE).toFloat()
+        scaleX.inRange(curvePoint.curvePoint.x, range)
+    }
+
+    private fun addNewPointAndSort(newPoint: CurvePoint) {
+        currentPoints.add(newPoint)
+        currentPoints.sortBy { curvePoint -> curvePoint.curvePoint.x }
+    }
+
+    private fun onMove(event: MotionEvent) = onTouchEventAction {
+        //TODO изменять точку
+    }
+
+    private fun onUp(event: MotionEvent) = onTouchEventAction {
+        //TODO очистить текущую точку
+    }
+
+    private fun onTouchEventAction(action: () -> Unit) {
+        action.invoke()
+        invalidate()
+    }
+
+
+    private fun createTestPoints() = mutableListOf<CurvePoint>().apply {
+        for (i in 1..7) {
+            val viewX = i * 75
+            val viewY = min(max((1000 * Math.random()).toInt(), startY), endY)
+
+            add(
+                CurvePoint(viewX, viewY, width, height)
+            )
+        }
+    }
+
+}
