@@ -6,8 +6,7 @@ enum class CurvesViewState {
     WHITE_STATE,
     RED_STATE,
     GREEN_STATE,
-    BLUE_STATE;
-
+    BLUE_STATE
 }
 
 internal fun CurvesViewState.toColor() = when (this) {

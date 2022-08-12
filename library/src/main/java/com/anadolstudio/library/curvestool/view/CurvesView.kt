@@ -6,8 +6,11 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import androidx.core.graphics.toPoint
+import androidx.core.graphics.toPointF
 import com.anadolstudio.library.curvestool.data.CurvePoint
 import com.anadolstudio.library.curvestool.data.CurvePoint.Companion.MAX_VALUE
+import com.anadolstudio.library.curvestool.listener.CurvesValuesChangeListener
 import com.anadolstudio.library.curvestool.util.*
 
 class CurvesView @JvmOverloads constructor(
@@ -63,6 +66,8 @@ class CurvesView @JvmOverloads constructor(
     private var endY: Int = 0
     private var borderWidth: Int = 0
     private var borderHeight: Int = 0
+
+    private var changeListener: CurvesValuesChangeListener? = null
 
     init {
         setBackgroundColor(Color.TRANSPARENT)
@@ -184,7 +189,6 @@ class CurvesView @JvmOverloads constructor(
             true -> selectIfYInTouchRange(scaleY, pointInXRange)
             false -> selectNewPoint(event)
         }
-
     }
 
     private fun selectNewPoint(event: MotionEvent) {
@@ -215,6 +219,8 @@ class CurvesView @JvmOverloads constructor(
 
         val scaleX = event.x.minus(PADDING).scaleTo(borderWidth, MAX_VALUE)
         val scaleY = event.y.minus(PADDING).scaleTo(borderHeight, MAX_VALUE)
+        var isChanged = false
+
         if (currentPoints.first() != selectPoint && currentPoints.last() != selectPoint) {
             val range = (borderWidth * X_RANGE_PERCENT)
                 .scaleTo(borderWidth, MAX_VALUE).toFloat()
@@ -229,6 +235,7 @@ class CurvesView @JvmOverloads constructor(
             if (leftPoint == selectPoint && rightPoint == selectPoint) {
                 selectPoint.viewPoint.x = event.x
                 selectPoint.curvePoint.x = scaleX.toFloat()
+                isChanged = true
             }
 
             selectPoint.candidateToDelete = event.y.toInt() !in 0..height
@@ -237,8 +244,27 @@ class CurvesView @JvmOverloads constructor(
         if (event.y.toInt() in startY..endY) {
             selectPoint.viewPoint.y = event.y
             selectPoint.curvePoint.y = scaleY.toFloat()
+            isChanged = true
         }
 
+        if (isChanged) {
+            notifyListener()
+        }
+    }
+
+    private fun notifyListener() {
+        val changedPoints = currentPoints
+            .filter { curvePoint -> !curvePoint.candidateToDelete }
+            .map { curvePoint ->
+                PointF(curvePoint.curvePoint.x, MAX_VALUE - curvePoint.curvePoint.y).toPoint()
+            }
+
+        when (viewState) {
+            CurvesViewState.WHITE_STATE -> changeListener?.onWhiteChanelChanged(changedPoints)
+            CurvesViewState.RED_STATE -> changeListener?.onRedChanelChanged(changedPoints)
+            CurvesViewState.GREEN_STATE -> changeListener?.onGreenChanelChanged(changedPoints)
+            CurvesViewState.BLUE_STATE -> changeListener?.onBlueChanelChanged(changedPoints)
+        }
     }
 
     private fun onUp() = onTouchEventAction { removeCandidateToDelete() }
@@ -270,8 +296,12 @@ class CurvesView @JvmOverloads constructor(
         viewState = CurvesViewState.WHITE_STATE
     }
 
+    fun setChangeListener(listener: CurvesValuesChangeListener) {
+        changeListener = listener
+    }
+
     private fun MutableList<CurvePoint>.init() {
-        this.add(CurvePoint(startX, endY, borderWidth, borderHeight))
-        this.add(CurvePoint(endX, startY, borderWidth, borderHeight))
+        this.add(CurvePoint(Point(startX, endY).toPointF(), Point(0, MAX_VALUE).toPointF()))
+        this.add(CurvePoint(Point(endX, startY).toPointF(), Point(MAX_VALUE, 0).toPointF()))
     }
 }

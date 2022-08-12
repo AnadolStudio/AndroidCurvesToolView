@@ -41,6 +41,6 @@ data class CurvePoint(
 
     companion object {
 
-        const val MAX_VALUE = 256
+        const val MAX_VALUE = 255
     }
 }

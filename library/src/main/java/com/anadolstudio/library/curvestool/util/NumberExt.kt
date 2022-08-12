@@ -1,7 +1,15 @@
 package com.anadolstudio.library.curvestool.util
 
-fun Float.scaleTo(currentMax: Int, needMax: Int): Int =
-    ((this / currentMax) * needMax).toInt()
+import kotlin.math.roundToInt
+
+fun Float.scaleTo(currentMax: Int, needMax: Int): Int {
+    val result = ((this / currentMax) * needMax)
+
+    return when (result > needMax / 2) {
+        true -> result.roundToInt()
+        false -> result.toInt()
+    }
+}
 
 fun Float.inRange(center: Float, range: Float): Boolean = this in center - range..center + range
 
