@@ -50,12 +50,10 @@ class ThemeManager(viewState: CurvesViewState) {
     }
 
     internal val pointFillPaint = AntialiasPaint().apply {
-        color = Color.RED
         style = Paint.Style.FILL
     }
 
     internal val pointFillSelectedPaint = AntialiasPaint().apply {
-        color = Color.WHITE
         style = Paint.Style.FILL
     }
 

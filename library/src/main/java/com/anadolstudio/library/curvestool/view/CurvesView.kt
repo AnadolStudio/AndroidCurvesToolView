@@ -9,8 +9,6 @@ import android.view.View
 import com.anadolstudio.library.curvestool.data.CurvePoint
 import com.anadolstudio.library.curvestool.data.CurvePoint.Companion.MAX_VALUE
 import com.anadolstudio.library.curvestool.util.*
-import kotlin.math.max
-import kotlin.math.min
 
 class CurvesView @JvmOverloads constructor(
     context: Context,
@@ -20,17 +18,19 @@ class CurvesView @JvmOverloads constructor(
 
     companion object {
         private const val AFTER_FIRST = 1
-        private const val INTENSITY = 0.15F
+        private const val INTENSITY = 0.035F
         private const val X_RANGE_PERCENT = 0.04167F // 4.167 %
         private const val Y_RANGE_PERCENT = 0.1F // 10 %
         private val PADDING = 8.dpToPx()
     }
 
-    private var viewState: CurvesViewState = CurvesViewState.RED_STATE
+    private var viewState: CurvesViewState = CurvesViewState.WHITE_STATE
         set(value) {
             field = value
             themeManager.curvePaint.color = value.toColor()
             themeManager.pointStrokePaint.color = value.toColor()
+            themeManager.pointFillPaint.color = value.toColor()
+            themeManager.pointFillSelectedPaint.color = value.toPointFillSelectedColor()
 
             currentPoints = when (value) {
                 CurvesViewState.WHITE_STATE -> whitePoints
@@ -61,6 +61,8 @@ class CurvesView @JvmOverloads constructor(
     private var startY: Int = 0
     private var endX: Int = 0
     private var endY: Int = 0
+    private var borderWidth: Int = 0
+    private var borderHeight: Int = 0
 
     init {
         setBackgroundColor(Color.TRANSPARENT)
@@ -74,11 +76,16 @@ class CurvesView @JvmOverloads constructor(
         startY = PADDING
         endX = width - PADDING
         endY = height - PADDING
+        borderWidth = endX - startX
+        borderHeight = endY - startY
 
         if (changed && currentPoints.isEmpty()) {
-            currentPoints.add(CurvePoint(startX, endY, width, height))
-            currentPoints.addAll(createTestPoints())
-            currentPoints.add(CurvePoint(endX, startY, width, height))
+            whitePoints.init()
+            redPoints.init()
+            greenPoints.init()
+            bluePoints.init()
+
+            showWhiteState()
         }
     }
 
@@ -86,8 +93,10 @@ class CurvesView @JvmOverloads constructor(
         super.onDraw(canvas)
         drawBorder(canvas)
 
-        drawCurveCubicBezier(canvas, currentPoints.map { it.viewPoint })
-        drawAllPoints(canvas, currentPoints)
+        val drawPoint = currentPoints.filter { curvePoint -> !curvePoint.candidateToDelete }
+
+        drawCurveCubicBezier(canvas, drawPoint.map { it.viewPoint })
+        drawAllPoints(canvas, drawPoint)
     }
 
     private fun drawAllPoints(canvas: Canvas, points: List<CurvePoint>) {
@@ -116,10 +125,10 @@ class CurvesView @JvmOverloads constructor(
         points
             .drop(AFTER_FIRST)
             .forEachWithPreviousAndNext { prevPrevious, previous, current, next ->
-                val prevDx = (current.x - prevPrevious.x) * INTENSITY
-                val prevDy = (current.y - prevPrevious.y) * INTENSITY
-                val curDx = (next.x - previous.x) * INTENSITY
-                val curDy = (next.y - previous.y) * INTENSITY
+                val prevDx = (current.x - prevPrevious.x) * (INTENSITY + ratio(points))
+                val prevDy = (current.y - prevPrevious.y) * (INTENSITY + ratio(points))
+                val curDx = (next.x - previous.x) * (INTENSITY + ratio(points))
+                val curDy = (next.y - previous.y) * (INTENSITY + ratio(points))
 
                 path.cubicTo(
                     previous.x + prevDx,
@@ -135,6 +144,8 @@ class CurvesView @JvmOverloads constructor(
             drawPath(path, themeManager.curvePaint)
         }
     }
+
+    private fun ratio(points: List<PointF>) = INTENSITY * points.count() / 4
 
     private fun Canvas.drawInRect(
         left: Int, top: Int, right: Int, bottom: Int, action: Canvas.() -> Unit
@@ -158,18 +169,19 @@ class CurvesView @JvmOverloads constructor(
         when (event.action) {
             MotionEvent.ACTION_DOWN -> onTap(event)
             MotionEvent.ACTION_MOVE -> onMove(event)
-            MotionEvent.ACTION_UP -> onUp(event)
+            MotionEvent.ACTION_UP -> onUp()
         }
     }
 
     private fun onTap(event: MotionEvent) = onTouchEventAction {
-        val scaleX = event.x.scaleTo(width, MAX_VALUE)
-        val scaleY = event.y.scaleTo(height, MAX_VALUE)
+        val scaleX = event.x.minus(startX).scaleTo(borderWidth, MAX_VALUE)
+        val scaleY = event.y.minus(scaleY).scaleTo(borderHeight, MAX_VALUE)
 
-        val pointInRange = inXRange(scaleX)
+        val pointInXRange = getPointInXRange(scaleX)
+        selectedPoint = null
 
-        when (pointInRange != null) {
-            true -> selectIfYInTouchRange(scaleY, pointInRange)
+        when (pointInXRange != null) {
+            true -> selectIfYInTouchRange(scaleY, pointInXRange)
             false -> selectNewPoint(event)
         }
 
@@ -181,15 +193,15 @@ class CurvesView @JvmOverloads constructor(
     }
 
     private fun selectIfYInTouchRange(y: Int, pointInRange: CurvePoint) {
-        val range = (height * Y_RANGE_PERCENT).scaleTo(height, MAX_VALUE).toFloat()
+        val range = (borderHeight * Y_RANGE_PERCENT).scaleTo(height, MAX_VALUE).toFloat()
 
         if (y.inRange(pointInRange.curvePoint.y, range)) {
             selectedPoint = pointInRange
         }
     }
 
-    private fun inXRange(scaleX: Int) = currentPoints.find { curvePoint ->
-        val range = (width * X_RANGE_PERCENT).scaleTo(width, MAX_VALUE).toFloat()
+    private fun getPointInXRange(scaleX: Int) = currentPoints.find { curvePoint ->
+        val range = (borderWidth * X_RANGE_PERCENT).scaleTo(width, MAX_VALUE).toFloat()
         scaleX.inRange(curvePoint.curvePoint.x, range)
     }
 
@@ -199,11 +211,42 @@ class CurvesView @JvmOverloads constructor(
     }
 
     private fun onMove(event: MotionEvent) = onTouchEventAction {
-        //TODO изменять точку
+        val selectPoint = selectedPoint ?: return@onTouchEventAction
+
+        val scaleX = event.x.minus(PADDING).scaleTo(borderWidth, MAX_VALUE)
+        val scaleY = event.y.minus(PADDING).scaleTo(borderHeight, MAX_VALUE)
+        if (currentPoints.first() != selectPoint && currentPoints.last() != selectPoint) {
+            val range = (borderWidth * X_RANGE_PERCENT)
+                .scaleTo(borderWidth, MAX_VALUE).toFloat()
+
+            val leftPoint = currentPoints.find { curvePoint ->
+                scaleX.inRange(curvePoint.curvePoint.x, range)
+            }
+            val rightPoint = currentPoints.findLast { curvePoint ->
+                scaleX.inRange(curvePoint.curvePoint.x, range)
+            }
+
+            if (leftPoint == selectPoint && rightPoint == selectPoint) {
+                selectPoint.viewPoint.x = event.x
+                selectPoint.curvePoint.x = scaleX.toFloat()
+            }
+
+            selectPoint.candidateToDelete = event.y.toInt() !in 0..height
+        }
+
+        if (event.y.toInt() in startY..endY) {
+            selectPoint.viewPoint.y = event.y
+            selectPoint.curvePoint.y = scaleY.toFloat()
+        }
+
     }
 
-    private fun onUp(event: MotionEvent) = onTouchEventAction {
-        //TODO очистить текущую точку
+    private fun onUp() = onTouchEventAction { removeCandidateToDelete() }
+
+    private fun removeCandidateToDelete() {
+        currentPoints
+            .find { point -> point.candidateToDelete }
+            ?.also { candidateToDelete -> currentPoints.remove(candidateToDelete) }
     }
 
     private fun onTouchEventAction(action: () -> Unit) {
@@ -211,16 +254,24 @@ class CurvesView @JvmOverloads constructor(
         invalidate()
     }
 
-
-    private fun createTestPoints() = mutableListOf<CurvePoint>().apply {
-        for (i in 1..7) {
-            val viewX = i * 75
-            val viewY = min(max((1000 * Math.random()).toInt(), startY), endY)
-
-            add(
-                CurvePoint(viewX, viewY, width, height)
-            )
-        }
+    fun showRedState() {
+        viewState = CurvesViewState.RED_STATE
     }
 
+    fun showGreenState() {
+        viewState = CurvesViewState.GREEN_STATE
+    }
+
+    fun showBlueState() {
+        viewState = CurvesViewState.BLUE_STATE
+    }
+
+    fun showWhiteState() {
+        viewState = CurvesViewState.WHITE_STATE
+    }
+
+    private fun MutableList<CurvePoint>.init() {
+        this.add(CurvePoint(startX, endY, borderWidth, borderHeight))
+        this.add(CurvePoint(endX, startY, borderWidth, borderHeight))
+    }
 }

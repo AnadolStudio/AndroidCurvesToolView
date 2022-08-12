@@ -6,7 +6,8 @@ import com.anadolstudio.library.curvestool.util.scaleTo
 data class CurvePoint(
     var viewPoint: PointF,
     var curvePoint: PointF,
-    var isSelected: Boolean = false
+    var isSelected: Boolean = false,
+    var candidateToDelete: Boolean = false
 ) {
 
     constructor(
@@ -40,6 +41,6 @@ data class CurvePoint(
 
     companion object {
 
-        const val MAX_VALUE = 255
+        const val MAX_VALUE = 256
     }
 }

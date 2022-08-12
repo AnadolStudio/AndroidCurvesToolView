@@ -16,3 +16,10 @@ internal fun CurvesViewState.toColor() = when (this) {
     CurvesViewState.GREEN_STATE -> Color.GREEN
     CurvesViewState.BLUE_STATE -> Color.BLUE
 }
+
+internal fun CurvesViewState.toPointFillSelectedColor() = when (this) {
+    CurvesViewState.WHITE_STATE -> Color.DKGRAY
+    CurvesViewState.RED_STATE -> Color.DKGRAY
+    CurvesViewState.GREEN_STATE -> Color.DKGRAY
+    CurvesViewState.BLUE_STATE -> Color.DKGRAY
+}
