@@ -21,7 +21,7 @@ class CurvesView @JvmOverloads constructor(
 
     companion object {
         private const val INTENSITY = 0.2F
-        private const val X_RANGE_PERCENT = 0.04167F // 4.167 %
+        private const val X_RANGE_PERCENT = 0.08334F// 8.334 %
         private const val Y_RANGE_PERCENT = 0.15F // 15 %
         private val PADDING = 8.dpToPx()
         private val DELETE_ZONE = 100
@@ -70,7 +70,7 @@ class CurvesView @JvmOverloads constructor(
     private var changeListener: CurvesValuesChangeListener? = null
 
     init {
-        setBackgroundColor(Color.TRANSPARENT)
+        setBackgroundColor(Color.BLUE)
     }
 
     @SuppressLint("DrawAllocation")
