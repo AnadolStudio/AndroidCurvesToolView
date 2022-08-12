@@ -21,7 +21,7 @@ class CurvesView @JvmOverloads constructor(
 
     companion object {
         private const val AFTER_FIRST = 1
-        private const val INTENSITY = 0.035F
+        private const val INTENSITY = 0.2F
         private const val X_RANGE_PERCENT = 0.04167F // 4.167 %
         private const val Y_RANGE_PERCENT = 0.1F // 10 %
         private val PADDING = 8.dpToPx()
@@ -129,12 +129,12 @@ class CurvesView @JvmOverloads constructor(
         path.moveTo(first.x, first.y)
 
         points
-            .drop(AFTER_FIRST)
+//            .drop(AFTER_FIRST)
             .forEachWithPreviousAndNext { prevPrevious, previous, current, next ->
-                val prevDx = (current.x - prevPrevious.x) * (INTENSITY + ratio(points))
-                val prevDy = (current.y - prevPrevious.y) * (INTENSITY + ratio(points))
-                val curDx = (next.x - previous.x) * (INTENSITY + ratio(points))
-                val curDy = (next.y - previous.y) * (INTENSITY + ratio(points))
+                val prevDx = (current.x - prevPrevious.x) * INTENSITY
+                val prevDy = (current.y - prevPrevious.y) * INTENSITY
+                val curDx = (next.x - previous.x) * INTENSITY
+                val curDy = (next.y - previous.y) * INTENSITY
 
                 path.cubicTo(
                     previous.x + prevDx,
@@ -151,7 +151,7 @@ class CurvesView @JvmOverloads constructor(
         }
     }
 
-    private fun ratio(points: List<PointF>) = INTENSITY * points.count() / 4
+    private fun ratio(size: Int): Int = if (size > 3) 5 else 1
 
     private fun Canvas.drawInRect(
         left: Int, top: Int, right: Int, bottom: Int, action: Canvas.() -> Unit
