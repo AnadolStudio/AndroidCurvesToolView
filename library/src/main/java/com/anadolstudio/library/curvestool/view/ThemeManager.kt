@@ -1,7 +1,6 @@
 package com.anadolstudio.library.curvestool.view
 
-import android.graphics.Color
-import android.graphics.Paint
+import android.graphics.*
 import com.anadolstudio.library.curvestool.util.AntialiasPaint
 import com.anadolstudio.library.curvestool.util.dpToPx
 
@@ -13,19 +12,14 @@ class ThemeManager(viewState: CurvesViewState) {
             borderPaint.color = value
         }
 
-    internal var borderWidth = 2F.dpToPx()
-        set(value) {
-            field = value
-            borderPaint.strokeWidth = value
-        }
-
     internal var curveWidth = 2F.dpToPx()
         set(value) {
             field = value
+            borderPaint.strokeWidth = value
             curvePaint.strokeWidth = value
         }
 
-    internal var pointStrokeWidth = 1F.dpToPx()
+    internal var pointStrokeWidth = 2F.dpToPx()
         set(value) {
             field = value
             pointStrokePaint.strokeWidth = value
@@ -33,13 +27,14 @@ class ThemeManager(viewState: CurvesViewState) {
 
     internal val borderPaint = AntialiasPaint().apply {
         color = borderColor
-        strokeWidth = borderWidth
+        strokeWidth = curveWidth
     }
 
     internal val curvePaint = AntialiasPaint().apply {
         color = viewState.toColor()
         strokeWidth = curveWidth
         style = Paint.Style.STROKE
+//        xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_ATOP)
     }
 
     internal val pointStrokePaint = AntialiasPaint().apply {
@@ -49,12 +44,10 @@ class ThemeManager(viewState: CurvesViewState) {
     }
 
     internal val pointFillPaint = AntialiasPaint().apply {
-        color = Color.RED
         style = Paint.Style.FILL
     }
 
     internal val pointFillSelectedPaint = AntialiasPaint().apply {
-        color = Color.WHITE
         style = Paint.Style.FILL
     }
 
