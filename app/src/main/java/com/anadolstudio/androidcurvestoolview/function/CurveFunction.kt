@@ -1,8 +1,6 @@
-package com.anadolstudio.androidcurvestoolview
+package com.anadolstudio.androidcurvestoolview.function
 
 import android.graphics.Point
-import com.anadolstudio.library.Function
-import com.anadolstudio.library.FunctionDecorator
 
 class CurveFunction(
     private val rgb: List<Point>,

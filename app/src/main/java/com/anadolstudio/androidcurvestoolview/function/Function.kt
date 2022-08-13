@@ -1,4 +1,4 @@
-package com.anadolstudio.library
+package com.anadolstudio.androidcurvestoolview.function
 
 interface Function {
 
