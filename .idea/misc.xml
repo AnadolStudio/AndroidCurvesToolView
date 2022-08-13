@@ -3,7 +3,13 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/Users/tereh/Desktop/My_Projects/Android/AndroidCurvesToolView/app/src/main/res/layout/activity_main.xml" value="0.36666666666666664" />
+        <entry key="..\:/Users/tereh/Desktop/My_Projects/Android/AndroidCurvesToolView/app/src/main/res/drawable/ic_refresh.xml" value="0.184" />
+        <entry key="..\:/Users/tereh/Desktop/My_Projects/Android/AndroidCurvesToolView/app/src/main/res/drawable/item_ripple_oval_without_mask.xml" value="0.184" />
+        <entry key="..\:/Users/tereh/Desktop/My_Projects/Android/AndroidCurvesToolView/app/src/main/res/drawable/oval_button_selector.xml" value="0.184" />
+        <entry key="..\:/Users/tereh/Desktop/My_Projects/Android/AndroidCurvesToolView/app/src/main/res/drawable/simple__selected_oval.xml" value="0.184" />
+        <entry key="..\:/Users/tereh/Desktop/My_Projects/Android/AndroidCurvesToolView/app/src/main/res/drawable/simple_oval.xml" value="0.184" />
+        <entry key="..\:/Users/tereh/Desktop/My_Projects/Android/AndroidCurvesToolView/app/src/main/res/drawable/simple_selected_oval.xml" value="0.181" />
+        <entry key="..\:/Users/tereh/Desktop/My_Projects/Android/AndroidCurvesToolView/app/src/main/res/layout/activity_main.xml" value="0.33" />
       </map>
     </option>
   </component>

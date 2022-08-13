@@ -7,7 +7,7 @@ class CurveFunction(
     private val r: List<Point>,
     private val g: List<Point>,
     private val b: List<Point>,
-    function: Function
+    function: Function = Function.Empty
 ) : FunctionDecorator(function) {
 
     private companion object {

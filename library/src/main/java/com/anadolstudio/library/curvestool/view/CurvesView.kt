@@ -70,7 +70,7 @@ class CurvesView @JvmOverloads constructor(
     private var changeListener: CurvesValuesChangeListener? = null
 
     init {
-        setBackgroundColor(Color.BLUE)
+
     }
 
     @SuppressLint("DrawAllocation")
@@ -85,13 +85,16 @@ class CurvesView @JvmOverloads constructor(
         borderHeight = endY - startY
 
         if (changed && currentPoints.isEmpty()) {
-            whitePoints.init()
-            redPoints.init()
-            greenPoints.init()
-            bluePoints.init()
-
+            initDefaultPoints()
             showWhiteState()
         }
+    }
+
+    private fun initDefaultPoints() {
+        whitePoints.init()
+        redPoints.init()
+        greenPoints.init()
+        bluePoints.init()
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -212,6 +215,7 @@ class CurvesView @JvmOverloads constructor(
     private fun addNewPointAndSort(newPoint: CurvePoint) {
         currentPoints.add(newPoint)
         currentPoints.sortBy { curvePoint -> curvePoint.curvePoint.x }
+        notifyListener()
     }
 
     private fun onMove(event: MotionEvent) = onTouchEventAction {
@@ -263,9 +267,7 @@ class CurvesView @JvmOverloads constructor(
     private fun notifyListener() {
         val changedPoints = currentPoints
             .filter { curvePoint -> !curvePoint.candidateToDelete }
-            .map { curvePoint ->
-                PointF(curvePoint.curvePoint.x, MAX_VALUE - curvePoint.curvePoint.y).toPoint()
-            }
+            .mapToPoint()
 
         when (viewState) {
             CurvesViewState.WHITE_STATE -> changeListener?.onWhiteChanelChanged(changedPoints)
@@ -308,8 +310,26 @@ class CurvesView @JvmOverloads constructor(
         changeListener = listener
     }
 
+    fun reset() {
+        whitePoints.clear()
+        redPoints.clear()
+        greenPoints.clear()
+        bluePoints.clear()
+
+        initDefaultPoints()
+
+        changeListener?.onReset()
+
+        invalidate()
+    }
+
     private fun MutableList<CurvePoint>.init() {
         this.add(CurvePoint(Point(startX, endY).toPointF(), Point(0, MAX_VALUE).toPointF()))
         this.add(CurvePoint(Point(endX, startY).toPointF(), Point(MAX_VALUE, 0).toPointF()))
     }
+
+    private fun List<CurvePoint>.mapToPoint(): List<Point> = this.map { curvePoint ->
+        PointF(curvePoint.curvePoint.x, MAX_VALUE - curvePoint.curvePoint.y).toPoint()
+    }
+
 }

@@ -34,7 +34,6 @@ class ThemeManager(viewState: CurvesViewState) {
         color = viewState.toColor()
         strokeWidth = curveWidth
         style = Paint.Style.STROKE
-//        xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_ATOP)
     }
 
     internal val pointStrokePaint = AntialiasPaint().apply {
