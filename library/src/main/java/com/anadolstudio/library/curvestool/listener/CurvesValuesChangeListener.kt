@@ -4,7 +4,7 @@ import android.graphics.Point
 
 interface CurvesValuesChangeListener {
 
-    fun onRGBChanelChanged(points: List<Point>)
+    fun onWhiteChanelChanged(points: List<Point>)
 
     fun onRedChanelChanged(points: List<Point>)
 
@@ -14,13 +14,13 @@ interface CurvesValuesChangeListener {
 
 
     class Simple(
-        private val onRGBChanelChanged: (List<Point>) -> Unit,
+        private val onWhiteChanelChanged: (List<Point>) -> Unit,
         private val onRedChanelChanged: (List<Point>) -> Unit,
         private val onGreenChanelChanged: (List<Point>) -> Unit,
         private val onBlueChanelChanged: (List<Point>) -> Unit
     ) : CurvesValuesChangeListener {
 
-        override fun onRGBChanelChanged(points: List<Point>) = onRGBChanelChanged.invoke(points)
+        override fun onWhiteChanelChanged(points: List<Point>) = onWhiteChanelChanged.invoke(points)
 
         override fun onRedChanelChanged(points: List<Point>) = onRedChanelChanged.invoke(points)
 
