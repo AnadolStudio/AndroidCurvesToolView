@@ -6,3 +6,6 @@ import android.graphics.Paint
 fun Canvas.drawLine(startX: Int, startY: Int, stopX: Int, stopY: Int, paint: Paint) {
     this.drawLine(startX.toFloat(), startY.toFloat(), stopX.toFloat(), stopY.toFloat(), paint)
 }
+fun Canvas.drawRect(startX: Int, startY: Int, stopX: Int, stopY: Int, paint: Paint) {
+    this.drawRect(startX.toFloat(), startY.toFloat(), stopX.toFloat(), stopY.toFloat(), paint)
+}
