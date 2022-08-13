@@ -64,7 +64,14 @@ interface CurvesValuesChangeListener {
             notifyListener()
         }
 
-        override fun onReset() = onReset.invoke()
+        override fun onReset() {
+            onReset.invoke()
+
+            whitePoints = listOf()
+            redPoints = listOf()
+            greenPoints = listOf()
+            bluePoints = listOf()
+        }
 
         private fun notifyListener() {
             onChanged.invoke(whitePoints, redPoints, greenPoints, bluePoints)

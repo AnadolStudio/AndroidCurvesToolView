@@ -24,16 +24,13 @@ class CurvesView @JvmOverloads constructor(
         private const val X_RANGE_PERCENT = 0.08334F// 8.334 %
         private const val Y_RANGE_PERCENT = 0.15F // 15 %
         private val PADDING = 8.dpToPx()
-        private val DELETE_ZONE = 100
+        private const val DELETE_ZONE = 100
     }
 
     private var viewState: CurvesViewState = CurvesViewState.WHITE_STATE
         set(value) {
             field = value
-            themeManager.curvePaint.color = value.toColor()
-            themeManager.pointStrokePaint.color = value.toColor()
-            themeManager.pointFillPaint.color = value.toColor()
-            themeManager.pointFillSelectedPaint.color = value.toPointFillSelectedColor()
+            changeColor(value)
 
             currentPoints = when (value) {
                 CurvesViewState.WHITE_STATE -> whitePoints
@@ -44,6 +41,14 @@ class CurvesView @JvmOverloads constructor(
 
             requestLayout()
         }
+
+    private fun changeColor(value: CurvesViewState) {
+        themeManager.curvePaint.color = value.toColor()
+        themeManager.curveFillPaint.color = value.toColor()
+        themeManager.pointStrokePaint.color = value.toColor()
+        themeManager.pointFillPaint.color = value.toColor()
+        themeManager.pointFillSelectedPaint.color = value.toPointFillSelectedColor()
+    }
 
     private val themeManager = ThemeManager(viewState)
 
@@ -69,9 +74,6 @@ class CurvesView @JvmOverloads constructor(
 
     private var changeListener: CurvesValuesChangeListener? = null
 
-    init {
-
-    }
 
     @SuppressLint("DrawAllocation")
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
@@ -91,10 +93,10 @@ class CurvesView @JvmOverloads constructor(
     }
 
     private fun initDefaultPoints() {
-        whitePoints.init()
-        redPoints.init()
-        greenPoints.init()
-        bluePoints.init()
+        whitePoints.apply { clear() }.init()
+        redPoints.apply { clear() }.init()
+        greenPoints.apply { clear() }.init()
+        bluePoints.apply { clear() }.init()
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -148,6 +150,8 @@ class CurvesView @JvmOverloads constructor(
             }
 
         canvas.drawInRect(startX, startY, endX, endY) {
+            drawPath(path, themeManager.curveFillPaint)
+            canvas.drawLine(startX, endY, endX, startY, themeManager.diagonalStrokePaint)
             drawPath(path, themeManager.curvePaint)
         }
     }
@@ -162,14 +166,23 @@ class CurvesView @JvmOverloads constructor(
     }
 
     private fun drawBorder(canvas: Canvas) {
-        val w = themeManager.borderPaint.strokeWidth.toInt() / 2
-        val paint = themeManager.borderPaint
+        val w = themeManager.borderStrokePaint.strokeWidth.toInt() / 2
 
-        canvas.drawLine(startX + w, endY - w, endX - w, startY + w, paint) // Draw diagonal line
-        canvas.drawLine(startX + w, startY + w, endX - w, startY + w, paint) // Draw top line
-        canvas.drawLine(endX - w, startY, endX - w, endY, paint) // Draw right line
-        canvas.drawLine(endX - w, endY - w, startX + w, endY - w, paint) // Draw bottom line
-        canvas.drawLine(startX + w, endY, startX + w, startY, paint) // Draw left line
+        val curveWidth = themeManager.curveWidth
+        canvas.drawRect(
+            startX - w + curveWidth,
+            startY - w + curveWidth,
+            endX + w - curveWidth,
+            endY + w - curveWidth,
+            themeManager.borderStrokePaint
+        )
+        canvas.drawRect(
+            startX - w + curveWidth * 2,
+            startY - w + curveWidth * 2,
+            endX + w - curveWidth * 2,
+            endY + w - curveWidth * 2,
+            themeManager.borderFillPaint
+        )
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -311,15 +324,9 @@ class CurvesView @JvmOverloads constructor(
     }
 
     fun reset() {
-        whitePoints.clear()
-        redPoints.clear()
-        greenPoints.clear()
-        bluePoints.clear()
-
+        selectedPoint = null
         initDefaultPoints()
-
         changeListener?.onReset()
-
         invalidate()
     }
 

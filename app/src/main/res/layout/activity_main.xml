@@ -11,20 +11,10 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:scaleType="centerCrop"
-        android:src="@drawable/sample_photo"
         app:layout_constraintBottom_toTopOf="@+id/lanier_layout"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <com.anadolstudio.library.curvestool.view.CurvesView
-        android:id="@+id/curve"
-        android:layout_width="0dp"
-        android:layout_height="200dp"
-        android:layout_margin="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/lanier_layout"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />
 
     <LinearLayout
         android:id="@+id/lanier_layout"
