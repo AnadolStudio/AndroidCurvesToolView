@@ -10,7 +10,6 @@ class ThemeManager(viewState: CurvesViewState) {
         set(value) {
             field = value
             borderStrokePaint.color = value
-            diagonalStrokePaint.color = value
         }
 
     internal var curveWidth = 2F.dpToPx()
@@ -23,7 +22,6 @@ class ThemeManager(viewState: CurvesViewState) {
         set(value) {
             field = value
             borderStrokePaint.strokeWidth = value
-            diagonalStrokePaint.strokeWidth = value
         }
 
     internal var pointStrokeWidth = 2F.dpToPx()
@@ -36,14 +34,6 @@ class ThemeManager(viewState: CurvesViewState) {
         color = borderColor
         strokeWidth = borderWidth
         style = Paint.Style.STROKE
-        xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_ATOP)
-    }
-
-    internal val diagonalStrokePaint = AntialiasPaint().apply {
-        color = borderColor
-        strokeWidth = borderWidth
-        style = Paint.Style.STROKE
-        xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_OVER)
     }
 
     internal val borderFillPaint = AntialiasPaint().apply {
@@ -60,7 +50,7 @@ class ThemeManager(viewState: CurvesViewState) {
     internal val curveFillPaint = AntialiasPaint().apply {
         color = viewState.toColor()
         style = Paint.Style.FILL
-        xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP)
+        xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
     }
 
     internal val pointStrokePaint = AntialiasPaint().apply {

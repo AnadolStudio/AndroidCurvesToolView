@@ -102,9 +102,11 @@ class CurvesView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         drawBorder(canvas)
+        canvas.drawLine(startX, endY, endX, startY, themeManager.borderStrokePaint) // Diagonal
+
+        canvas.saveLayer(0F, 0F, width.toFloat(), height.toFloat(), null)
 
         val drawPoint = currentPoints.filter { curvePoint -> !curvePoint.candidateToDelete }
-
         drawCurveCubicBezier(canvas, drawPoint.map { it.viewPoint })
         drawAllPoints(canvas, drawPoint)
     }
@@ -150,8 +152,8 @@ class CurvesView @JvmOverloads constructor(
             }
 
         canvas.drawInRect(startX, startY, endX, endY) {
+            drawBorder(canvas, needFill = false)
             drawPath(path, themeManager.curveFillPaint)
-            canvas.drawLine(startX, endY, endX, startY, themeManager.diagonalStrokePaint)
             drawPath(path, themeManager.curvePaint)
         }
     }
@@ -165,24 +167,25 @@ class CurvesView @JvmOverloads constructor(
         restore()
     }
 
-    private fun drawBorder(canvas: Canvas) {
-        val w = themeManager.borderStrokePaint.strokeWidth.toInt() / 2
+    private fun drawBorder(canvas: Canvas, needFill: Boolean = true) {
+        val borderWidth = themeManager.borderStrokePaint.strokeWidth.toInt() / 2
 
         val curveWidth = themeManager.curveWidth
-        canvas.drawRect(
-            startX - w + curveWidth,
-            startY - w + curveWidth,
-            endX + w - curveWidth,
-            endY + w - curveWidth,
-            themeManager.borderStrokePaint
-        )
-        canvas.drawRect(
-            startX - w + curveWidth * 2,
-            startY - w + curveWidth * 2,
-            endX + w - curveWidth * 2,
-            endY + w - curveWidth * 2,
-            themeManager.borderFillPaint
-        )
+        val startXRect = startX - borderWidth + curveWidth
+        val startYRect = startY - borderWidth + curveWidth
+        val endXRect = endX + borderWidth - curveWidth
+        val endYRect = endY + borderWidth - curveWidth
+
+        canvas.drawRect(startXRect, startYRect, endXRect, endYRect, themeManager.borderStrokePaint)
+        if (needFill) {
+            canvas.drawRect(
+                startXRect + curveWidth,
+                startYRect + curveWidth,
+                endXRect - curveWidth,
+                endYRect - curveWidth,
+                themeManager.borderFillPaint
+            )
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
