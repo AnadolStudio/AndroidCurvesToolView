@@ -19,7 +19,7 @@
   }
 	
   dependencies {
-      implementation 'com.github.AnadolStudio:AndroidCurvesToolView:v1.0.3'
+      implementation 'com.github.AnadolStudio:AndroidCurvesToolView:v1.0.4'
   }
 
 ```
