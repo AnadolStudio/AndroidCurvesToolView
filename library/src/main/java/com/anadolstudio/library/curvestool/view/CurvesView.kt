@@ -8,10 +8,12 @@ import android.view.MotionEvent
 import android.view.View
 import androidx.core.graphics.toPoint
 import androidx.core.graphics.toPointF
+import com.anadolstudio.library.R
 import com.anadolstudio.library.curvestool.data.CurvePoint
 import com.anadolstudio.library.curvestool.data.CurvePoint.Companion.MAX_VALUE
 import com.anadolstudio.library.curvestool.listener.CurvesValuesChangeListener
 import com.anadolstudio.library.curvestool.util.*
+import kotlin.math.abs
 
 class CurvesView @JvmOverloads constructor(
     context: Context,
@@ -21,10 +23,13 @@ class CurvesView @JvmOverloads constructor(
 
     companion object {
         private const val INTENSITY = 0.2F
-        private const val X_RANGE_PERCENT = 0.08334F// 8.334 %
-        private const val Y_RANGE_PERCENT = 0.15F // 15 %
-        private val PADDING = 8.dpToPx()
+        private const val X_RANGE_PERCENT = 0.08334F // 8.334 %
+        private const val Y_RANGE_PERCENT = 0.2F // 20 %
         private const val DELETE_ZONE = 100
+        private const val MAX_SIZE = 12
+        private val PADDING = 8.dpToPx()
+        private val DEFAULT_SIZE = 2.dpToPx().toFloat()
+        private val DEFAULT_POINT_SIDE = 10.dpToPx().toFloat()
     }
 
     private var viewState: CurvesViewState = CurvesViewState.WHITE_STATE
@@ -42,15 +47,7 @@ class CurvesView @JvmOverloads constructor(
             requestLayout()
         }
 
-    private fun changeColor(value: CurvesViewState) {
-        themeManager.curvePaint.color = value.toColor()
-        themeManager.curveFillPaint.color = value.toColor()
-        themeManager.pointStrokePaint.color = value.toColor()
-        themeManager.pointFillPaint.color = value.toColor()
-        themeManager.pointFillSelectedPaint.color = value.toPointFillSelectedColor()
-    }
-
-    private val themeManager = ThemeManager(viewState)
+    private val themeManager = ThemeManager(context, viewState)
 
     private val whitePoints = mutableListOf<CurvePoint>()
     private val redPoints = mutableListOf<CurvePoint>()
@@ -64,7 +61,7 @@ class CurvesView @JvmOverloads constructor(
             field?.isSelected = true
         }
 
-    private var pointSide: Int = 30
+    private var pointSide: Float = DEFAULT_POINT_SIDE
     private var startX: Int = 0
     private var startY: Int = 0
     private var endX: Int = 0
@@ -74,6 +71,27 @@ class CurvesView @JvmOverloads constructor(
 
     private var changeListener: CurvesValuesChangeListener? = null
 
+    init {
+        if (attrs != null) {
+            val typeArray = context.obtainStyledAttributes(attrs, R.styleable.CurvesView)
+
+            themeManager.borderWidth =
+                typeArray.getDimension(R.styleable.CurvesView_borderStrokeWidth, DEFAULT_SIZE)
+            themeManager.curveWidth =
+                typeArray.getDimension(R.styleable.CurvesView_curveStrokeWidth, DEFAULT_SIZE)
+            themeManager.pointStrokeWidth =
+                typeArray.getDimension(R.styleable.CurvesView_pointStrokeWidth, DEFAULT_SIZE)
+            pointSide =
+                typeArray.getDimension(R.styleable.CurvesView_pointSide, DEFAULT_POINT_SIDE)
+            themeManager.borderStrokeColor =
+                typeArray.getColor(R.styleable.CurvesView_borderStrokeColor, Color.LTGRAY)
+            themeManager.borderFillColor =
+                typeArray.getColor(R.styleable.CurvesView_borderFillColor, Color.TRANSPARENT)
+
+            typeArray.recycle()
+        }
+
+    }
 
     @SuppressLint("DrawAllocation")
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
@@ -102,9 +120,6 @@ class CurvesView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         drawBorder(canvas)
-        canvas.drawLine(startX, endY, endX, startY, themeManager.borderStrokePaint) // Diagonal
-
-        canvas.saveLayer(0F, 0F, width.toFloat(), height.toFloat(), null)
 
         val drawPoint = currentPoints.filter { curvePoint -> !curvePoint.candidateToDelete }
         drawCurveCubicBezier(canvas, drawPoint.map { it.viewPoint })
@@ -116,12 +131,12 @@ class CurvesView @JvmOverloads constructor(
     }
 
     private fun drawPoint(canvas: Canvas, current: PointF, isSelected: Boolean = false) {
-        val rect = rectF(current, pointSide / 2)
+        val rect = pointRect(current, pointSide / 2)
         canvas.drawOval(rect, themeManager.getPointFillPaint(isSelected)) // Fill
         canvas.drawOval(rect, themeManager.pointStrokePaint) // Stroke
     }
 
-    private fun rectF(current: PointF, halfSize: Int) = RectF(
+    private fun pointRect(current: PointF, halfSize: Float) = RectF(
         current.x - halfSize,
         current.y - halfSize,
         current.x + halfSize,
@@ -152,7 +167,7 @@ class CurvesView @JvmOverloads constructor(
             }
 
         canvas.drawInRect(startX, startY, endX, endY) {
-            drawBorder(canvas, needFill = false)
+            drawBorder(canvas, onlyBorder = true)
             drawPath(path, themeManager.curveFillPaint)
             drawPath(path, themeManager.curvePaint)
         }
@@ -167,7 +182,7 @@ class CurvesView @JvmOverloads constructor(
         restore()
     }
 
-    private fun drawBorder(canvas: Canvas, needFill: Boolean = true) {
+    private fun drawBorder(canvas: Canvas, onlyBorder: Boolean = false) {
         val borderWidth = themeManager.borderStrokePaint.strokeWidth.toInt() / 2
 
         val curveWidth = themeManager.curveWidth
@@ -177,15 +192,34 @@ class CurvesView @JvmOverloads constructor(
         val endYRect = endY + borderWidth - curveWidth
 
         canvas.drawRect(startXRect, startYRect, endXRect, endYRect, themeManager.borderStrokePaint)
-        if (needFill) {
-            canvas.drawRect(
-                startXRect + curveWidth,
-                startYRect + curveWidth,
-                endXRect - curveWidth,
-                endYRect - curveWidth,
-                themeManager.borderFillPaint
-            )
-        }
+
+        if (onlyBorder) return
+
+        canvas.drawRect(
+            startXRect + curveWidth,
+            startYRect + curveWidth,
+            endXRect - curveWidth,
+            endYRect - curveWidth,
+            themeManager.borderFillPaint
+        )
+
+        // Diagonal
+        canvas.drawLine(
+            startX + borderWidth,
+            endY - borderWidth,
+            endX - borderWidth,
+            startY + borderWidth,
+            themeManager.borderStrokePaint
+        )
+        canvas.saveLayer(0F, 0F, width.toFloat(), height.toFloat(), null)
+    }
+
+    private fun changeColor(value: CurvesViewState) {
+        themeManager.curvePaint.color = value.toColor(context)
+        themeManager.curveFillPaint.color = value.toColor(context)
+        themeManager.pointStrokePaint.color = value.toColor(context)
+        themeManager.pointFillPaint.color = value.toColor(context)
+        themeManager.pointFillSelectedPaint.color = value.toPointFillSelectedColor(context)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -211,6 +245,7 @@ class CurvesView @JvmOverloads constructor(
     }
 
     private fun selectNewPoint(event: MotionEvent) {
+        if (currentPoints.size >= MAX_SIZE) return
         selectedPoint = CurvePoint(event.x, event.y, width, height, true)
             .also(this::addNewPointAndSort)
     }
@@ -223,10 +258,14 @@ class CurvesView @JvmOverloads constructor(
         }
     }
 
-    private fun getPointInXRange(scaleX: Int) = currentPoints.find { curvePoint ->
-        val range = (borderWidth * X_RANGE_PERCENT).scaleTo(width, MAX_VALUE).toFloat()
-        scaleX.inRange(curvePoint.curvePoint.x, range)
-    }
+    private fun getPointInXRange(scaleX: Int) = currentPoints
+        .filter { curvePoint ->
+            val range = (borderWidth * X_RANGE_PERCENT).scaleTo(width, MAX_VALUE).toFloat()
+            scaleX.inRange(curvePoint.curvePoint.x, range)
+        }
+        .minByOrNull { curvePoint ->
+            abs(curvePoint.curvePoint.x - scaleX)
+        }
 
     private fun addNewPointAndSort(newPoint: CurvePoint) {
         currentPoints.add(newPoint)

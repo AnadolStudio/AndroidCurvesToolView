@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="pointSelectedWhiteFillColor">#454545</color>
+    <color name="pointSelectedRedFillColor">#FFFFFF</color>
+    <color name="pointSelectedGreenFillColor">#FFFFFF</color>
+    <color name="pointSelectedBlueFillColor">#FFFFFF</color>
+
+    <color name="whiteCurveColor">#FFFFFF</color>
+    <color name="redCurveColor">#CC0000</color>
+    <color name="greenCurveColor">#669900</color>
+    <color name="blueCurveColor">#0099CC</color>
+
+</resources>
