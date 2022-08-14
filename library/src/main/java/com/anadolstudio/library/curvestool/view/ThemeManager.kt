@@ -1,15 +1,25 @@
 package com.anadolstudio.library.curvestool.view
 
-import android.graphics.*
+import android.content.Context
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import com.anadolstudio.library.curvestool.util.AntialiasPaint
 import com.anadolstudio.library.curvestool.util.dpToPx
 
-class ThemeManager(viewState: CurvesViewState) {
+class ThemeManager(context: Context, viewState: CurvesViewState) {
 
-    internal var borderColor = Color.LTGRAY
+    internal var borderStrokeColor = Color.LTGRAY
         set(value) {
             field = value
             borderStrokePaint.color = value
+        }
+
+    internal var borderFillColor = Color.TRANSPARENT
+        set(value) {
+            field = value
+            borderFillPaint.color = value
         }
 
     internal var curveWidth = 2F.dpToPx()
@@ -31,30 +41,30 @@ class ThemeManager(viewState: CurvesViewState) {
         }
 
     internal val borderStrokePaint = AntialiasPaint().apply {
-        color = borderColor
+        color = borderStrokeColor
         strokeWidth = borderWidth
         style = Paint.Style.STROKE
     }
 
     internal val borderFillPaint = AntialiasPaint().apply {
-        color = Color.TRANSPARENT
+        color = borderFillColor
         style = Paint.Style.FILL
     }
 
     internal val curvePaint = AntialiasPaint().apply {
-        color = viewState.toColor()
+        color = viewState.toColor(context)
         strokeWidth = curveWidth
         style = Paint.Style.STROKE
     }
 
     internal val curveFillPaint = AntialiasPaint().apply {
-        color = viewState.toColor()
+        color = viewState.toColor(context)
         style = Paint.Style.FILL
         xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
     }
 
     internal val pointStrokePaint = AntialiasPaint().apply {
-        color = viewState.toColor()
+        color = viewState.toColor(context)
         strokeWidth = pointStrokeWidth
         style = Paint.Style.STROKE
     }

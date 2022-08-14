@@ -3,5 +3,7 @@
     <color name="colorPrimary">#333333</color>
     <color name="colorPrimaryVariant">#454545</color>
     <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="alphaBlack">#80000000</color>
+    <color name="white">#FFFFFF</color>
+
 </resources>
