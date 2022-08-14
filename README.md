@@ -1,4 +1,4 @@
-[![Platform](https://img.shields.io/badge/platform-android-green.svg)](http://developer.android.com/index.html) [![](https://jitpack.io/v/AnadolStudio/AndroidCurvesToolView.svg)](https://jitpack.io/#AnadolStudio/AndroidCurvesToolView) ![APM]
+[![Platform](https://img.shields.io/badge/platform-android-green.svg)](http://developer.android.com/index.html) [![](https://jitpack.io/v/AnadolStudio/AndroidCurvesToolView.svg)](https://jitpack.io/#AnadolStudio/AndroidCurvesToolView)
 # AndroidCurvesToolView
 #### Curves tool view like in Photoshop
 
