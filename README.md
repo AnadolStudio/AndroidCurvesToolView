@@ -46,7 +46,7 @@
 |---------------------|-------------------------------------------------------------------|------------|
 | borderFillColor 		| Color in border						                                        | Transparent|
 | borderStrokeColor 	| Color border   					                                          | Dark gray  |
-| borderStrokeWidth 	| Width of border line	                                            | White      |
+| borderStrokeWidth 	| Width of border line	                                            | 2dp      |
 | curveStrokeWidth 		| Width of curve line			                                          | 2dp        |
 | pointSide 	        | Size of point	                                                    | 10dp       |
 | pointStrokeWidth 		| Stroke width in selected point			                              | 2dp	       |
