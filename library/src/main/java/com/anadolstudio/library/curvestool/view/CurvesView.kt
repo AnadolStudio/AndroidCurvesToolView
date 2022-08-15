@@ -121,9 +121,9 @@ class CurvesView @JvmOverloads constructor(
         super.onDraw(canvas)
         drawBorder(canvas)
 
-        val drawPoint = currentPoints.filter { curvePoint -> !curvePoint.candidateToDelete }
-        drawCurveCubicBezier(canvas, drawPoint.map { it.viewPoint })
-        drawAllPoints(canvas, drawPoint)
+        val drawPoints = currentPoints.filter { curvePoint -> !curvePoint.candidateToDelete }
+        drawCurveCubicBezier(canvas, drawPoints.map { it.viewPoint })
+        drawAllPoints(canvas, drawPoints)
     }
 
     private fun drawAllPoints(canvas: Canvas, points: List<CurvePoint>) {
@@ -205,10 +205,10 @@ class CurvesView @JvmOverloads constructor(
 
         // Diagonal
         canvas.drawLine(
-            startX + borderWidth,
-            endY - borderWidth,
-            endX - borderWidth,
-            startY + borderWidth,
+            startX + borderWidth / 2,
+            endY - borderWidth / 2,
+            endX - borderWidth / 2,
+            startY + borderWidth / 2,
             themeManager.borderStrokePaint
         )
         canvas.saveLayer(0F, 0F, width.toFloat(), height.toFloat(), null)
