@@ -30,7 +30,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/yourbackground"
-
         app:borderFillColor="@color/yourColor"
         app:borderStrokeColor="@color/yourColor"
         app:borderStrokeWidth="@dimens/yourWidth"
